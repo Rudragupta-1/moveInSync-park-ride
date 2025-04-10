@@ -54,3 +54,6 @@ const RideBookingSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
   }, { timestamps: true });
   module.exports =  mongoose.model('RideBooking', RideBookingSchema);
+
+
+

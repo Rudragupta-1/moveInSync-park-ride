@@ -9,5 +9,5 @@ const MetroScheduleSchema = new mongoose.Schema({
       offPeakHours: Number // in minutes
     },
     isActive: { type: Boolean, default: true }
-  }, { timestamps: true });
+  }, { timestamps: true }); 
   module.exports = mongoose.model('MetroSchedule', MetroScheduleSchema);

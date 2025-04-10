@@ -17,4 +17,4 @@ const MetroStationSchema = new mongoose.Schema({
       close: String
     }
   }, { timestamps: true });
-  module.exports =  mongoose.model('MetroStation', MetroStationSchema);
+  module.exports =  mongoose.model('MetroStation', MetroStationSchema); 

@@ -22,6 +22,6 @@ const PaymentSchema = new mongoose.Schema({
       refundId: String,
       refundedAt: Date
     },
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now } 
   }, { timestamps: true });
   module.exports =  mongoose.model('Payment', PaymentSchema);
