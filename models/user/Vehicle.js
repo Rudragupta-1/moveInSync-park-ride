@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const VehicleSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     type: { type: String, enum: ['car', 'bike', 'ev'], required: true },

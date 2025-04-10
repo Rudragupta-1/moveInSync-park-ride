@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const RideVehicleSchema = new mongoose.Schema({
     providerId: { type: mongoose.Schema.Types.ObjectId, ref: 'RideProvider', required: true },
     vehicleType: { type: String, required: true }, // Car model, shuttle type, etc.

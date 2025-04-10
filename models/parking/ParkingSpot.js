@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const ParkingSpotSchema = new mongoose.Schema({
     stationId: { type: mongoose.Schema.Types.ObjectId, ref: 'ParkingStation', required: true },
     level: { type: String, required: true },

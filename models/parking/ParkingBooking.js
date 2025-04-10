@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const ParkingBookingSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     stationId: { type: mongoose.Schema.Types.ObjectId, ref: 'ParkingStation', required: true },

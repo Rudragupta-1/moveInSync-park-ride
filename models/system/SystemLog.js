@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const SystemLogSchema = new mongoose.Schema({
     action: { type: String, required: true },
     module: { 

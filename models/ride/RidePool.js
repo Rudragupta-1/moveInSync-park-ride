@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const RidePoolSchema = new mongoose.Schema({
     poolId: { type: String, unique: true },
     providerId: { type: mongoose.Schema.Types.ObjectId, ref: 'RideProvider' },

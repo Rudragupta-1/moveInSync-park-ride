@@ -10,10 +10,11 @@ const userRoutes = require('./routes/userRoutes');
 const vehicleRoutes = require('./routes/vehicleRoutes');
 const parkingRoutes = require('./routes/parkingRoutes');
 const rideRoutes = require('./routes/rideRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
+// const paymentRoutes = require('./routes/paymentRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const metroRoutes = require('./routes/metroRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+// const allocationRoutes = require('./routes/allocationRoutes'); //Hungarian algorithm routes
 
 // Load environment variables
 dotenv.config();
@@ -41,10 +42,11 @@ app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/parking', parkingRoutes);
 app.use('/api/rides', rideRoutes);
-app.use('/api/payments', paymentRoutes);
+// app.use('/api/payments', paymentRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/metro', metroRoutes);
 app.use('/api/notifications', notificationRoutes);
+// app.use('/api/allocation', allocationRoutes); // Hungarian algorithm allocation routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {

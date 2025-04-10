@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const RideBookingSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     bookingReference: { type: String, unique: true },

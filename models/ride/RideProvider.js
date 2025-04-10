@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const RideProviderSchema = new mongoose.Schema({
     name: { type: String, required: true },
     type: { type: String, enum: ['cab', 'shuttle', 'e-rickshaw'], required: true },

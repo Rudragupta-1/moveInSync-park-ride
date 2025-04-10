@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const MetroScheduleSchema = new mongoose.Schema({
     stationId: { type: mongoose.Schema.Types.ObjectId, ref: 'MetroStation', required: true },
     lineName: { type: String, required: true },

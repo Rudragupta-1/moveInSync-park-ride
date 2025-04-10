@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const DynamicPricingSchema = new mongoose.Schema({
     type: { type: String, enum: ['parking', 'ride'], required: true },
     stationId: { type: mongoose.Schema.Types.ObjectId, ref: 'ParkingStation' }, // For parking pricing

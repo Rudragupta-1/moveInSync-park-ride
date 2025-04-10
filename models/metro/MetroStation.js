@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const MetroStationSchema = new mongoose.Schema({
     name: { type: String, required: true },
     code: { type: String, unique: true },
