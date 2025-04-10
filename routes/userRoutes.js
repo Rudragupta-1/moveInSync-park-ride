@@ -4,15 +4,15 @@ const userController = require('../controllers/userController');
 const auth = require('../middleware/auth');
 
 // Authentication routes
-router.post('/register', userController.register);
-router.post('/login', userController.login);
+router.post('/register', userController.register);// Tested
+router.post('/login', userController.login);//Tested
 router.post('/verify-email', userController.verifyEmail);
 router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password', userController.resetPassword);
 
 // User profile routes (protected)
 router.get('/profile', auth, userController.getUserProfile);
-router.put('/profile', auth, userController.updateUserProfile);
+router.put('/profile', auth, userController.updateUserProfile); 
 router.put('/profile/password', auth, userController.changePassword);
 router.put('/profile/image', auth, userController.updateProfileImage);
 

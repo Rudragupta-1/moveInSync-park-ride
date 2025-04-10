@@ -21,7 +21,9 @@
   "homepage": "https://github.com/Rudragupta-1/moveInSync-park-ride#readme",
   "dependencies": {
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
