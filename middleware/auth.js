@@ -1,41 +1,29 @@
 const jwt = require('jsonwebtoken');
-const { User } = require('../models/user/User');
 
-module.exports = async (req, res, next) => {
+const auth = (req, res, next) => {
   try {
-    // Get token from header
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-    
-    if (!token) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Authentication token is required' 
-      });
+    const authHeader = req.headers.authorization;
+    console.log('Authorization Header:', authHeader);
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('No token provided');
+      return res.status(401).json({ success: false, message: 'No token provided' });
     }
 
-    // Verify token
+    const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Find user by id
-    const user = await User.findById(decoded.userId);
-    
-    if (!user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'User not found' 
-      });
-    }
+    console.log('Decoded token:', decoded);
 
-    // Add user to request object
-    req.user = user;
-    req.userId = user._id;
-    
+    req.user = { userId: decoded.userId };
     next();
-  } catch (err) {
-    res.status(401).json({ 
-      success: false, 
-      message: 'Invalid token', 
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined 
+  } catch (error) {
+    console.error('JWT verification failed:', error.message);
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid token',
+      error: error.message
     });
   }
 };
+
+module.exports = auth;

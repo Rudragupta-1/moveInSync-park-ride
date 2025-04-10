@@ -161,7 +161,6 @@ const userController = {
   async getUserProfile(req, res) {
     try {
       const userId = req.user.userId;
-      
       const user = await User.findById(userId).select('-passwordHash -verificationToken -passwordResetToken -passwordResetExpires');
       
       if (!user) {
