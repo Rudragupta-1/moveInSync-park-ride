@@ -1,16 +1,10 @@
-// // routes/allocationRoutes.js
-// const express = require('express');
-// const router = express.Router();
-// const allocationController = require('../controllers/allocationController');
-// const { authenticate } = require('../middleware/auth'); 
+// routes/allocationRoutes.js
+const express = require('express');
+const router = express.Router();
+const allocationController = require('../controllers/allocationController');
 
-// // Generate allocation of vehicles to spots for a station
-// router.post('/stations/:stationId/allocate', authenticate, allocationController.allocateVehiclesToStation);
+router.post('/allocate/:stationId', allocationController.allocateVehiclesToStation);
+router.post('/reserve', allocationController.reserveAllocatedSpots);
+router.post('/cost-matrix/:stationId', allocationController.getCostMatrix);
 
-// // Reserve spots based on allocation results
-// router.post('/reserve', authenticate, allocationController.reserveAllocatedSpots);
-
-// // Get cost matrix for a station and vehicles
-// router.post('/stations/:stationId/cost-matrix', authenticate, allocationController.getCostMatrix);
-
-// module.exports = router;
+module.exports = router;

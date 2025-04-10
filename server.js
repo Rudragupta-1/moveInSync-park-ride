@@ -14,7 +14,7 @@ const rideRoutes = require('./routes/rideRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const metroRoutes = require('./routes/metroRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
-// const allocationRoutes = require('./routes/allocationRoutes'); //Hungarian algorithm routes
+const allocationRoutes = require('./routes/allocationRoutes'); //Hungarian algorithm routes
 
 // Load environment variables
 dotenv.config();
@@ -46,7 +46,7 @@ app.use('/api/rides', rideRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/metro', metroRoutes);
 app.use('/api/notifications', notificationRoutes);
-// app.use('/api/allocation', allocationRoutes); // Hungarian algorithm allocation routes
+app.use('/api/allocation', allocationRoutes); // Hungarian algorithm allocation routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {
