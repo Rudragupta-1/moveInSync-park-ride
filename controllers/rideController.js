@@ -10,6 +10,40 @@ const { generateBookingReference } = require('../utils/helpers'); // Assuming th
 /**
  * Ride Provider Controllers
  */
+
+exports.createProvider = async (req, res) => {
+  try {
+    const {
+      name,
+      type,
+      contactInfo,
+      fleetSize,
+      operatingHours,
+      servingStations,
+      active,
+      ratingAverage,
+      totalRides
+    } = req.body;
+
+    const newProvider = new RideProvider({
+      name,
+      type,
+      contactInfo,
+      fleetSize,
+      operatingHours,
+      servingStations,
+      active,
+      ratingAverage,
+      totalRides
+    });
+
+    const savedProvider = await newProvider.save();
+    res.status(201).json({ success: true, data: savedProvider });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.getAllProviders = async (req, res) => {
   try {
     const providers = await RideProvider.find({ active: true });
@@ -148,171 +182,51 @@ exports.getDriversByProvider = async (req, res) => {
  * Ride Booking Controllers
  */
 exports.createBooking = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const { 
-      rideType, 
-      providerId, 
-      vehicleId, 
-      pickupLocation, 
-      dropLocation, 
-      scheduleTime,
-      isShared,
-      relatedParkingBookingId
-    } = req.body;
+    const { rideType, providerId, vehicleId, pickupLocation, dropLocation, scheduleTime, isShared } = req.body;
 
     // Validate provider
-    const provider = await RideProvider.findById(providerId).session(session);
+    const provider = await RideProvider.findById(providerId);
     if (!provider || !provider.active) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({ success: false, message: 'Invalid or inactive provider' });
     }
 
-    // Validate vehicle if specified
-    let vehicle;
-    if (vehicleId) {
-      vehicle = await RideVehicle.findById(vehicleId).session(session);
-      if (!vehicle || vehicle.status !== 'available' || vehicle.providerId.toString() !== providerId) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ success: false, message: 'Invalid or unavailable vehicle' });
-      }
-    } else {
-      // Find an available vehicle of the requested type
-      vehicle = await RideVehicle.findOne({ 
-        providerId,
-        status: 'available'
-      }).session(session);
-
-      if (!vehicle) {
-        await session.abortTransaction();
-        session.endSession();
-        return res.status(400).json({ success: false, message: 'No available vehicles for this provider' });
-      }
+    // Validate vehicle
+    const vehicle = await RideVehicle.findById(vehicleId);
+    if (!vehicle || vehicle.status !== 'available' || vehicle.providerId.toString() !== providerId) {
+      return res.status(400).json({ success: false, message: 'Invalid or unavailable vehicle' });
     }
 
-    // Calculate fare
-    const fareDetails = await calculateRideFareInternal(
-      providerId,
-      pickupLocation.coordinates,
-      dropLocation.coordinates,
-      rideType,
-      isShared
-    );
+    // Create booking reference
+    const bookingReference = `BOOK-${Date.now()}`;
 
-    if (!fareDetails.success) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ success: false, message: fareDetails.message });
-    }
+    // Calculate base fare (you can add any logic for fare calculation)
+    const baseFare = 100;  // Example base fare value
+    const totalFare = baseFare; // Simplified, you can add logic for dynamic fare calculation
 
-    // Create booking
-    const bookingReference = generateBookingReference();
-    
+    // Create booking object
     const booking = new RideBooking({
       userId: req.user.id,
       bookingReference,
       rideType,
       providerId,
-      vehicleId: vehicle._id,
+      vehicleId,
       pickupLocation,
       dropLocation,
       scheduleTime,
-      estimatedDuration: fareDetails.estimatedDuration,
-      estimatedDistance: fareDetails.estimatedDistance,
-      baseFare: fareDetails.baseFare,
-      distanceFare: fareDetails.distanceFare,
-      timeFare: fareDetails.timeFare,
-      surgeMultiplier: fareDetails.surgeMultiplier,
-      totalFare: fareDetails.totalFare,
-      isShared,
-      relatedParkingBookingId
+      baseFare,
+      totalFare,
+      isShared
     });
 
-    // If ride is shared, check for available pool or create new one
-    if (isShared) {
-      const existingPool = await RidePool.findOne({
-        'startLocation.coordinates.lat': pickupLocation.coordinates.lat,
-        'startLocation.coordinates.lng': pickupLocation.coordinates.lng,
-        status: 'forming',
-        occupiedSeats: { $lt: vehicle.capacity }
-      }).session(session);
+    // Save booking
+    await booking.save();
 
-      if (existingPool) {
-        // Join existing pool
-        existingPool.rideBookings.push(booking._id);
-        existingPool.occupiedSeats += 1;
-        
-        // Update booking with pool ID
-        booking.ridePoolId = existingPool._id;
-        
-        await existingPool.save({ session });
-      } else {
-        // Create new pool
-        const newPool = new RidePool({
-          poolId: 'POOL-' + generateBookingReference(),
-          providerId,
-          vehicleId: vehicle._id,
-          startLocation: {
-            stationName: pickupLocation.stationName || '',
-            coordinates: pickupLocation.coordinates
-          },
-          capacity: vehicle.capacity,
-          occupiedSeats: 1,
-          rideBookings: [booking._id],
-          departureTime: scheduleTime
-        });
-        
-        await newPool.save({ session });
-        
-        // Update booking with pool ID
-        booking.ridePoolId = newPool._id;
-      }
-    }
+    // Respond with success
+    res.status(201).json({ success: true, data: booking, message: 'Booking created successfully' });
 
-    await booking.save({ session });
-
-    // Update vehicle status if immediate ride
-    const currentTime = new Date();
-    const scheduleTimeDate = new Date(scheduleTime);
-    
-    // If ride is scheduled within the next 30 minutes, consider it immediate
-    if (Math.abs(scheduleTimeDate - currentTime) <= 30 * 60 * 1000) {
-      vehicle.status = 'on-ride';
-      await vehicle.save({ session });
-      
-      // Find available driver
-      const driver = await Driver.findOne({
-        providerId,
-        status: 'active'
-      }).session(session);
-      
-      if (driver) {
-        driver.status = 'on-ride';
-        driver.currentVehicleId = vehicle._id;
-        await driver.save({ session });
-        
-        // Update booking with driver
-        booking.driverId = driver._id;
-        booking.status = 'driver-assigned';
-        await booking.save({ session });
-      }
-    }
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(201).json({ 
-      success: true, 
-      data: booking,
-      message: 'Ride booked successfully' 
-    });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    console.error('Error creating booking:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

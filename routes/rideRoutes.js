@@ -4,10 +4,11 @@ const rideController = require('../controllers/rideController');
 const auth = require('../middleware/auth');
 
 // Ride provider routes
-router.get('/providers', rideController.getAllProviders);
+router.post('/providers', auth, rideController.createProvider);// Tested
+router.get('/providers', rideController.getAllProviders);// Tested
 router.get('/providers/:id', rideController.getProviderById);
-router.get('/providers/station/:stationId', rideController.getProvidersByStation);
-router.get('/providers/type/:type', rideController.getProvidersByType);
+router.get('/providers/station/:stationId', rideController.getProvidersByStation);// Tested
+router.get('/providers/type/:type', rideController.getProvidersByType);// Tested
 
 // Ride vehicle routes
 router.get('/vehicles/:providerId', rideController.getVehiclesByProvider);

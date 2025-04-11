@@ -8,7 +8,7 @@ const RideProviderSchema = new mongoose.Schema({
     },
     fleetSize: Number,
     operatingHours: {
-      open: String,
+      open: String, 
       close: String,
       is24Hours: { type: Boolean, default: false }
     },
