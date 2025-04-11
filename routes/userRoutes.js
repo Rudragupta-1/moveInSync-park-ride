@@ -11,13 +11,13 @@ router.post('/forgot-password', userController.forgotPassword);
 router.post('/reset-password', userController.resetPassword);
 
 // User profile routes (protected)
-router.get('/profile', auth, userController.getUserProfile);
-router.put('/profile', auth, userController.updateUserProfile); 
+router.get('/profile', auth, userController.getUserProfile);//Tested
+router.put('/profile', auth, userController.updateUserProfile);
 router.put('/profile/password', auth, userController.changePassword);
 router.put('/profile/image', auth, userController.updateProfileImage);
 
 // User preferences routes (protected)
-router.get('/preferences', auth, userController.getUserPreferences);
+router.get('/preferences', auth, userController.getUserPreferences);//Tested
 router.put('/preferences', auth, userController.updateUserPreferences);
 router.post('/preferences/favorite-stations', auth, userController.addFavoriteStation);
 router.delete('/preferences/favorite-stations/:stationId', auth, userController.removeFavoriteStation);
@@ -32,9 +32,9 @@ router.delete('/payment-methods/:methodId', auth, userController.deletePaymentMe
 router.put('/payment-methods/:methodId/default', auth, userController.setDefaultPaymentMethod);
 
 // User commute history (protected)
-router.get('/commute-history', auth, userController.getCommuteHistory);
+router.get('/commute-history', auth, userController.getCommuteHistory);//Tested
 
 // User loyalty (protected)
-router.get('/loyalty', auth, userController.getLoyaltyInfo);
+router.get('/loyalty', auth, userController.getLoyaltyInfo);//Tested
 
 module.exports = router;
