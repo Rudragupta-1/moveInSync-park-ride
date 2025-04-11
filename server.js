@@ -39,7 +39,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 // Routes
 app.use('/api/users', userRoutes);//Tested
-app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/vehicles', vehicleRoutes);//Tested
 app.use('/api/parking', parkingRoutes);
 app.use('/api/rides', rideRoutes);
 // app.use('/api/payments', paymentRoutes);

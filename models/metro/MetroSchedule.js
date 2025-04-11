@@ -6,7 +6,7 @@ const MetroScheduleSchema = new mongoose.Schema({
     dayType: { type: String, enum: ['weekday', 'saturday', 'sunday', 'holiday'], required: true },
     departureTimes: [String], // Array of departure times in 24h format
     frequency: {
-      peakHours: Number, // in minutes
+      peakHours: Number, // in minutes 
       offPeakHours: Number // in minutes
     },
     isActive: { type: Boolean, default: true }

@@ -5,7 +5,7 @@ const MetroStationSchema = new mongoose.Schema({
     location: {
       address: String,
       city: String,
-      coordinates: {
+      coordinates: { 
         lat: { type: Number, required: true },
         lng: { type: Number, required: true }
       }

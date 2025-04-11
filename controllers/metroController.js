@@ -2,6 +2,43 @@ const MetroStation = require('../models/metro/MetroStation');
 const MetroSchedule = require('../models/metro/MetroSchedule');
 
 // Metro station controllers
+exports.addStation = async (req, res) => {
+  try {
+    const {
+      name,
+      code,
+      location,
+      lines = [],
+      connectedParkingStations = [],
+      facilities = [],
+      operatingHours
+    } = req.body;
+
+    // Validation
+    if (!name || !code || !location?.coordinates?.lat || !location?.coordinates?.lng) {
+      return res.status(400).json({ success: false, message: 'Required fields are missing' });
+    }
+
+    // Create station
+    const newStation = new MetroStation({
+      name,
+      code,
+      location,
+      lines,
+      connectedParkingStations,
+      facilities,
+      operatingHours
+    });
+
+    await newStation.save();
+
+    res.status(201).json({ success: true, message: 'Metro station added', data: newStation });
+  } catch (error) {
+    console.error('Add Station Error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 exports.getAllStations = async (req, res) => {
   try {
     const stations = await MetroStation.find();
