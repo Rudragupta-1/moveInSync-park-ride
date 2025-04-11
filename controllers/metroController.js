@@ -106,6 +106,62 @@ exports.getStationsNearby = async (req, res) => {
 };
 
 // Metro schedule controllers
+// Add this to your metroController.js file
+exports.addSchedule = async (req, res) => {
+  try {
+    const {
+      stationId,
+      lineName,
+      direction,
+      dayType,
+      departureTimes = [],
+      frequency,
+      isActive = true
+    } = req.body;
+
+    // Validation
+    if (!stationId || !lineName || !direction || !dayType) {
+      return res.status(400).json({ success: false, message: 'Required fields are missing' });
+    }
+    
+    // Validate if station exists
+    const stationExists = await MetroStation.findById(stationId);
+    if (!stationExists) {
+      return res.status(404).json({ success: false, message: 'Metro station not found' });
+    }
+    
+    // Validate dayType enum value
+    const validDayTypes = ['weekday', 'saturday', 'sunday', 'holiday'];
+    if (!validDayTypes.includes(dayType)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid day type. Must be one of: weekday, saturday, sunday, holiday' 
+      });
+    }
+
+    // Create schedule
+    const newSchedule = new MetroSchedule({
+      stationId,
+      lineName,
+      direction,
+      dayType,
+      departureTimes,
+      frequency,
+      isActive
+    });
+
+    await newSchedule.save();
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Metro schedule added', 
+      data: newSchedule 
+    });
+  } catch (error) {
+    console.error('Add Schedule Error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
 exports.getScheduleByStation = async (req, res) => {
   try {
     const schedules = await MetroSchedule.find({ stationId: req.params.stationId })

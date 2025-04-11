@@ -11,8 +11,9 @@ router.get('/stations/code/:code', metroController.getStationByCode);
 router.get('/stations/:id', metroController.getStationById);//Tested
 
 // Metro schedule routes
-router.get('/schedules/:stationId', metroController.getScheduleByStation);
-router.get('/schedules/:stationId/line/:lineName', metroController.getScheduleByStationAndLine);
-router.get('/schedules/:stationId/day/:dayType', metroController.getScheduleByStationAndDay);
+router.post('/schedules', auth, metroController.addSchedule);//Tested
+router.get('/schedules/:stationId', metroController.getScheduleByStation);//Tested
+router.get('/schedules/:stationId/line/:lineName', metroController.getScheduleByStationAndLine);//Tested
+router.get('/schedules/:stationId/day/:dayType', metroController.getScheduleByStationAndDay);// Tested
 
 module.exports = router;
