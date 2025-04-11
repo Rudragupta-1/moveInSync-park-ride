@@ -8,6 +8,69 @@ const { generateBookingReference, generateQRCode } = require('../utils/helpers')
 /**
  * Parking Station Controllers
  */
+exports.addParkingStation = async (req, res) => {
+  try {
+    const {
+      name,
+      location, // { address, city, state, zipCode, coordinates: { lat, lng } }
+      totalSpots,
+      availableSpots,
+      levels,
+      allocationStrategy,
+      costMatrix,
+      operatingHours,
+      facilities,
+      nearbyMetroStations,
+      imageUrls,
+      contactInfo
+    } = req.body;
+
+    // Basic validation
+    if (
+      !name ||
+      !location ||
+      !location.coordinates ||
+      location.coordinates.lat == null ||
+      location.coordinates.lng == null ||
+      totalSpots == null
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Required fields are missing: name, location.coordinates.lat/lng, totalSpots'
+      });
+    }
+
+    const newStation = new ParkingStation({
+      name,
+      location,
+      totalSpots,
+      availableSpots: availableSpots ?? totalSpots,
+      levels,
+      allocationStrategy,
+      costMatrix,
+      operatingHours,
+      facilities,
+      nearbyMetroStations,
+      imageUrls,
+      contactInfo,
+      isActive: true
+    });
+
+    await newStation.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Parking station added successfully',
+      data: newStation
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 exports.getAllStations = async (req, res) => {
   try {
     const stations = await ParkingStation.find({ isActive: true });

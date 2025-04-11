@@ -4,9 +4,10 @@ const parkingController = require('../controllers/parkingController');
 const auth = require('../middleware/auth');
 
 // Parking station routes
-router.get('/stations', parkingController.getAllStations);
-router.get('/stations/:id', parkingController.getStationById);
-router.get('/stations/near-metro/:metroId', parkingController.getStationsNearMetro);
+router.post('/stations', parkingController.addParkingStation);// Tested
+router.get('/stations', parkingController.getAllStations);// Tested
+router.get('/stations/:id', parkingController.getStationById); // Tested
+router.get('/stations/near-metro/:metroId', parkingController.getStationsNearMetro);// Tested
 router.get('/stations/near-location', parkingController.getStationsNearLocation);
 
 // Parking spot routes
