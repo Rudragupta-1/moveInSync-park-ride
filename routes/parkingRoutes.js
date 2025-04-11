@@ -11,16 +11,17 @@ router.get('/stations/near-metro/:metroId', parkingController.getStationsNearMet
 router.get('/stations/near-location', parkingController.getStationsNearLocation);
 
 // Parking spot routes
-router.get('/spots/:stationId', parkingController.getSpotsByStation);
-router.get('/spots/:stationId/available', parkingController.getAvailableSpotsByStation);
-router.get('/spots/:stationId/category/:category', parkingController.getSpotsByCategory);
+router.post('/spots', parkingController.addParkingSpot);// Tested
+router.get('/spots/:stationId', parkingController.getSpotsByStation);// Tested
+router.get('/spots/:stationId/available', parkingController.getAvailableSpotsByStation);// Tested
+router.get('/spots/:stationId/category/:category', parkingController.getSpotsByCategory);// Tested
 
 // Parking booking routes (protected)
-router.post('/bookings', auth, parkingController.createBooking);
-router.get('/bookings', auth, parkingController.getUserBookings);
-router.get('/bookings/:id', auth, parkingController.getBookingById);
-router.put('/bookings/:id/cancel', auth, parkingController.cancelBooking);
-router.put('/bookings/:id/extend', auth, parkingController.extendBooking); 
+router.post('/bookings', auth, parkingController.createBooking);// Tested
+router.get('/bookings', auth, parkingController.getUserBookings);// Tested
+router.get('/bookings/:id', auth, parkingController.getBookingById);// Tested
+router.put('/bookings/:id/cancel', auth, parkingController.cancelBooking);// Tested
+router.put('/bookings/:id/extend', auth, parkingController.extendBooking); // Tested
 router.post('/bookings/:id/check-in', auth, parkingController.checkInBooking);
 router.post('/bookings/:id/check-out', auth, parkingController.checkOutBooking);
 

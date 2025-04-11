@@ -136,6 +136,56 @@ exports.getStationsNearLocation = async (req, res) => {
 /**
  * Parking Spot Controllers
  */
+// In parkingController.js
+exports.addParkingSpot = async (req, res) => {
+  try {
+    const {
+      stationId,
+      level,
+      slotNumber,
+      category,
+      coordinates,
+      distanceToExit,
+      distanceToElevator,
+      preferenceScore,
+      sensorId
+    } = req.body;
+
+    // Basic validation
+    if (!stationId || !level || !slotNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'stationId, level, and slotNumber are required fields.'
+      });
+    }
+
+    const newSpot = new ParkingSpot({
+      stationId,
+      level,
+      slotNumber,
+      category,
+      coordinates,
+      distanceToExit,
+      distanceToElevator,
+      preferenceScore,
+      sensorId,
+    });
+
+    await newSpot.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Parking spot added successfully',
+      data: newSpot
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 exports.getSpotsByStation = async (req, res) => {
   try {
     const stationId = req.params.stationId;
@@ -174,84 +224,81 @@ exports.getSpotsByCategory = async (req, res) => {
  * Parking Booking Controllers
  */
 exports.createBooking = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const { 
-      stationId, 
-      parkingSpotId, 
-      vehicleId, 
-      startTime, 
-      endTime, 
-      bookingType 
+    const {
+      stationId,
+      parkingSpotId,
+      vehicleId,
+      startTime,
+      endTime,
+      bookingType,
+      baseAmount,
+      discountAmount,
+      totalAmount
     } = req.body;
 
-    // Check if spot is available
-    const spot = await ParkingSpot.findById(parkingSpotId).session(session);
-    if (!spot || spot.isOccupied || spot.isReserved) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ success: false, message: 'Parking spot is not available' });
+    // Basic validation
+    if (!stationId || !parkingSpotId || !vehicleId || !startTime || !endTime || !bookingType) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields' 
+      });
     }
 
-    // Calculate pricing
-    const pricingDetails = await calculateParkingFeeInternal(stationId, startTime, endTime, bookingType);
-    if (!pricingDetails.success) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ success: false, message: pricingDetails.message });
+    // Check if spot is available
+    const parkingSpot = await ParkingSpot.findById(parkingSpotId);
+    if (!parkingSpot || parkingSpot.isOccupied || parkingSpot.isReserved) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Parking spot is not available' 
+      });
     }
+
+    // Simple booking reference using timestamp
+    const bookingReference = `BK-${Date.now()}`;
 
     // Create booking
-    const bookingReference = generateBookingReference();
-    const qrCode = await generateQRCode(bookingReference);
-
-    const booking = new ParkingBooking({
-      userId: req.user.id,
+    const newBooking = new ParkingBooking({
+      userId: req.user.userId, // Assuming auth middleware sets req.user
       stationId,
       parkingSpotId,
       vehicleId,
       bookingReference,
-      startTime,
-      endTime,
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
       bookingType,
-      qrCode,
-      baseAmount: pricingDetails.baseAmount,
-      totalAmount: pricingDetails.totalAmount,
-      discountAmount: pricingDetails.discountAmount || 0
+      status: 'booked',
+      baseAmount,
+      discountAmount: discountAmount || 0,
+      totalAmount,
+      paymentStatus: 'pending'
     });
 
-    await booking.save({ session });
+    await newBooking.save();
 
-    // Update spot status
-    spot.isReserved = true;
-    spot.currentBookingId = booking._id;
-    await spot.save({ session });
+    // Update parking spot status
+    parkingSpot.isReserved = true;
+    await parkingSpot.save();
 
-    // Update station available spots count
-    const station = await ParkingStation.findById(stationId).session(session);
-    station.availableSpots = Math.max(0, station.availableSpots - 1);
-    await station.save({ session });
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(201).json({ 
-      success: true, 
-      data: booking,
-      message: 'Parking booked successfully' 
+    return res.status(201).json({
+      success: true,
+      message: 'Booking created successfully',
+      data: newBooking
     });
+
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Error creating booking:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
   }
 };
 
 exports.getUserBookings = async (req, res) => {
   try {
-    const bookings = await ParkingBooking.find({ userId: req.user.id })
+    const bookings = await ParkingBooking.find({ userId: req.user.userId })
       .populate('stationId', 'name location')
       .populate('parkingSpotId', 'level slotNumber category')
       .sort({ createdAt: -1 });
@@ -274,7 +321,7 @@ exports.getBookingById = async (req, res) => {
     }
 
     // Check if the booking belongs to the current user
-    if (booking.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (booking.userId.toString() !== req.user.userId ) {
       return res.status(403).json({ success: false, message: 'Not authorized to access this booking' });
     }
 
@@ -285,154 +332,109 @@ exports.getBookingById = async (req, res) => {
 };
 
 exports.cancelBooking = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const { id } = req.params;
-    const { cancellationReason } = req.body;
+    // const { cancellationReason } = req.body;
+    const cancellationReason = req.body?.cancellationReason || '';
 
-    const booking = await ParkingBooking.findById(id).session(session);
-    
+    const booking = await ParkingBooking.findById(id);
+
     if (!booking) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // Check if user authorized to cancel
-    if (booking.userId.toString() !== req.user.id && req.user.role !== 'admin') {
-      await session.abortTransaction();
-      session.endSession();
+    if (booking.userId.toString() !== req.user.userId ) {
       return res.status(403).json({ success: false, message: 'Not authorized to cancel this booking' });
     }
 
-    // Check if booking can be cancelled
-    const currentTime = new Date();
+    const now = new Date();
     const startTime = new Date(booking.startTime);
-    
-    // Business rule: Can't cancel after check-in or past start time
-    if (booking.status === 'checked-in' || currentTime >= startTime) {
-      await session.abortTransaction();
-      session.endSession();
+
+    if (booking.status === 'checked-in' || now >= startTime) {
       return res.status(400).json({ success: false, message: 'Cannot cancel booking at this time' });
     }
 
-    // Process cancellation
     booking.status = 'cancelled';
     booking.cancellationReason = cancellationReason;
-    
-    // Determine if refund is applicable
-    const hoursDifference = (startTime - currentTime) / (1000 * 60 * 60);
-    
-    if (hoursDifference >= 24) {
-      // Full refund if cancelled at least 24 hours in advance
+
+    const hoursLeft = (startTime - now) / (1000 * 60 * 60);
+
+    if (hoursLeft >= 24) {
       booking.refundDetails = {
         amount: booking.totalAmount,
-        reason: 'Full refund - Cancellation more than 24 hours in advance',
+        reason: 'Full refund',
         status: 'processing',
-        refundedAt: currentTime
+        refundedAt: now
       };
       booking.paymentStatus = 'refunded';
-    } else if (hoursDifference >= 6) {
-      // Partial refund if cancelled at least 6 hours in advance
-      const refundAmount = booking.totalAmount * 0.7; // 70% refund
+    } else if (hoursLeft >= 6) {
       booking.refundDetails = {
-        amount: refundAmount,
-        reason: 'Partial refund - Cancellation more than 6 hours in advance',
+        amount: booking.totalAmount * 0.7,
+        reason: 'Partial refund',
         status: 'processing',
-        refundedAt: currentTime
+        refundedAt: now
       };
       booking.paymentStatus = 'partial-refund';
     } else {
-      // No refund if cancelled less than 6 hours in advance
       booking.refundDetails = {
         amount: 0,
-        reason: 'No refund - Late cancellation',
+        reason: 'No refund',
         status: 'completed',
-        refundedAt: currentTime
+        refundedAt: now
       };
     }
 
-    await booking.save({ session });
+    await booking.save();
 
-    // Free up the parking spot
-    const spot = await ParkingSpot.findById(booking.parkingSpotId).session(session);
+    // Free the spot
+    const spot = await ParkingSpot.findById(booking.parkingSpotId);
     if (spot) {
       spot.isReserved = false;
       spot.currentBookingId = null;
-      await spot.save({ session });
+      await spot.save();
     }
 
-    // Update station available spots
-    const station = await ParkingStation.findById(booking.stationId).session(session);
-    if (station) {
-      station.availableSpots += 1;
-      await station.save({ session });
-    }
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(200).json({ 
-      success: true, 
-      data: booking,
-      message: 'Booking cancelled successfully' 
+    res.status(200).json({
+      success: true,
+      message: 'Booking cancelled successfully',
+      data: booking
     });
+
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
-exports.extendBooking = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
 
+exports.extendBooking = async (req, res) => {
   try {
     const { id } = req.params;
-    const { newEndTime } = req.body;
+    const  newEndTime  = req.body?.newEndTime || '';
 
     if (!newEndTime) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({ success: false, message: 'New end time is required' });
     }
 
-    const booking = await ParkingBooking.findById(id).session(session);
-    
+    const booking = await ParkingBooking.findById(id);
     if (!booking) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // Check if user is authorized
-    if (booking.userId.toString() !== req.user.id) {
-      await session.abortTransaction();
-      session.endSession();
+    if (booking.userId.toString() !== req.user.userId) {
       return res.status(403).json({ success: false, message: 'Not authorized to extend this booking' });
     }
-
-    // Check if booking is in a valid state for extension
-    if (booking.status !== 'booked' && booking.status !== 'checked-in') {
-      await session.abortTransaction();
-      session.endSession();
+    console.log(booking.status);
+    if (booking.status!=='booked') {
       return res.status(400).json({ success: false, message: 'Cannot extend booking in current state' });
     }
 
     const originalEndTime = new Date(booking.endTime);
     const newEndTimeDate = new Date(newEndTime);
 
-    // Validate new end time is after current end time
     if (newEndTimeDate <= originalEndTime) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({ success: false, message: 'New end time must be later than current end time' });
     }
 
-    // Calculate additional charges
     const additionalPricing = await calculateParkingFeeInternal(
       booking.stationId, 
       originalEndTime, 
@@ -441,12 +443,10 @@ exports.extendBooking = async (req, res) => {
     );
 
     if (!additionalPricing.success) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({ success: false, message: additionalPricing.message });
     }
 
-    // Update the booking
+    // Update booking
     booking.extensionHistory.push({
       originalEndTime,
       newEndTime: newEndTimeDate,
@@ -458,21 +458,17 @@ exports.extendBooking = async (req, res) => {
     booking.status = 'extended';
     booking.totalAmount += additionalPricing.totalAmount;
 
-    await booking.save({ session });
-
-    await session.commitTransaction();
-    session.endSession();
+    await booking.save();
 
     res.status(200).json({ 
       success: true, 
       data: booking,
       additionalCharge: additionalPricing.totalAmount,
-      message: 'Booking extended successfully' 
+      message: 'Booking extended successfully'
     });
+
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 };
 
