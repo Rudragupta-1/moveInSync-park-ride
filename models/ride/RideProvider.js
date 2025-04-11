@@ -3,7 +3,7 @@ const RideProviderSchema = new mongoose.Schema({
     name: { type: String, required: true },
     type: { type: String, enum: ['cab', 'shuttle', 'e-rickshaw'], required: true },
     contactInfo: {
-      phone: String,
+      phone: String, 
       email: String
     },
     fleetSize: Number,

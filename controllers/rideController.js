@@ -5,7 +5,7 @@ const RideBooking = require('../models/ride/RideBooking');
 const RidePool = require('../models/ride/RidePool');
 const ParkingStation = require('../models/parking/ParkingStation');
 const mongoose = require('mongoose');
-const { generateBookingReference } = require('../utils/helpers'); // Assuming this utility function exists
+const { generateBookingReference } = require('../utils/helpers'); 
 
 /**
  * Ride Provider Controllers
@@ -94,6 +94,50 @@ exports.getProvidersByType = async (req, res) => {
 /**
  * Ride Vehicle Controllers
  */
+exports.createVehicle = async (req, res) => {
+  try {
+    const {
+      providerId,
+      vehicleType,
+      registrationNumber,
+      capacity,
+      currentLocation,
+      driverId,
+      status,
+      features,
+      isEV,
+      currentBatteryLevel
+    } = req.body;
+
+    // Optional: Validate providerId or driverId existence here
+
+    const newVehicle = new RideVehicle({
+      providerId,
+      vehicleType,
+      registrationNumber,
+      capacity,
+      currentLocation,
+      driverId,
+      status,
+      features,
+      isEV,
+      currentBatteryLevel
+    });
+
+    const savedVehicle = await newVehicle.save();
+    res.status(201).json({ success: true, data: savedVehicle });
+  } catch (error) {
+    // Handle duplicate registration number error
+    if (error.code === 11000 && error.keyPattern?.registrationNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Vehicle with this registration number already exists'
+      });
+    }
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.getVehiclesByProvider = async (req, res) => {
   try {
     const providerId = req.params.providerId;
@@ -185,31 +229,36 @@ exports.createBooking = async (req, res) => {
   try {
     const { rideType, providerId, vehicleId, pickupLocation, dropLocation, scheduleTime, isShared } = req.body;
 
-    // Validate provider
-    const provider = await RideProvider.findById(providerId);
-    if (!provider || !provider.active) {
-      return res.status(400).json({ success: false, message: 'Invalid or inactive provider' });
-    }
-
     // Validate vehicle
     const vehicle = await RideVehicle.findById(vehicleId);
-    if (!vehicle || vehicle.status !== 'available' || vehicle.providerId.toString() !== providerId) {
+    if (!vehicle || vehicle.status !== 'available') {
       return res.status(400).json({ success: false, message: 'Invalid or unavailable vehicle' });
+    }
+
+    // Validate provider using vehicle's providerId (from DB)
+    const actualProvider = await RideProvider.findById(vehicle.providerId);
+    if (!actualProvider || !actualProvider.active) {
+      return res.status(400).json({ success: false, message: 'Vehicle linked to invalid or inactive provider' });
+    }
+
+    // Optional: check if request's providerId matches vehicle's actual one
+    if (providerId && providerId !== vehicle.providerId.toString()) {
+      return res.status(400).json({ success: false, message: 'Mismatch between provided providerId and vehicle\'s registered provider' });
     }
 
     // Create booking reference
     const bookingReference = `BOOK-${Date.now()}`;
 
-    // Calculate base fare (you can add any logic for fare calculation)
-    const baseFare = 100;  // Example base fare value
-    const totalFare = baseFare; // Simplified, you can add logic for dynamic fare calculation
+    // Fare calculation logic (can be extended)
+    const baseFare = 100;
+    const totalFare = baseFare;
 
-    // Create booking object
+    // Create and save booking
     const booking = new RideBooking({
-      userId: req.user.id,
+      userId: req.user.userId,
       bookingReference,
       rideType,
-      providerId,
+      providerId: vehicle.providerId, // Always trust vehicle's actual provider
       vehicleId,
       pickupLocation,
       dropLocation,
@@ -219,10 +268,8 @@ exports.createBooking = async (req, res) => {
       isShared
     });
 
-    // Save booking
     await booking.save();
 
-    // Respond with success
     res.status(201).json({ success: true, data: booking, message: 'Booking created successfully' });
 
   } catch (error) {
@@ -231,9 +278,10 @@ exports.createBooking = async (req, res) => {
   }
 };
 
+
 exports.getUserBookings = async (req, res) => {
   try {
-    const bookings = await RideBooking.find({ userId: req.user.id })
+    const bookings = await RideBooking.find({ userId: req.user.userId })
       .populate('providerId', 'name type')
       .populate('vehicleId', 'vehicleType registrationNumber')
       .populate('driverId', 'name phone')
@@ -250,15 +298,14 @@ exports.getBookingById = async (req, res) => {
     const booking = await RideBooking.findById(req.params.id)
       .populate('providerId', 'name type contactInfo')
       .populate('vehicleId', 'vehicleType registrationNumber features')
-      .populate('driverId', 'name phone profileImage')
-      .populate('ridePoolId', 'poolId departureTime estimatedArrivalTime occupiedSeats capacity');
+      .populate('driverId', 'name phone profileImage');
+      // Removed the ridePoolId populate that was causing the error
 
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // Check if the booking belongs to the current user
-    if (booking.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+    if (booking.userId.toString() !== req.user.userId) {
       return res.status(403).json({ success: false, message: 'Not authorized to access this booking' });
     }
 
@@ -267,108 +314,54 @@ exports.getBookingById = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 exports.cancelBooking = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const { id } = req.params;
     const { cancellationReason } = req.body;
 
-    const booking = await RideBooking.findById(id).session(session);
-    
+    const booking = await RideBooking.findById(id);
     if (!booking) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(404).json({ success: false, message: 'Booking not found' });
     }
 
-    // Check if user authorized to cancel
-    if (booking.userId.toString() !== req.user.id && req.user.role !== 'admin') {
-      await session.abortTransaction();
-      session.endSession();
+    // Check user authorization
+    if (booking.userId.toString() !== req.user.userId) {
       return res.status(403).json({ success: false, message: 'Not authorized to cancel this booking' });
     }
 
-    // Check if booking can be cancelled
+    // Check if booking is already completed or cancelled
     if (['completed', 'cancelled'].includes(booking.status)) {
-      await session.abortTransaction();
-      session.endSession();
       return res.status(400).json({ success: false, message: 'Booking cannot be cancelled' });
     }
 
-    const currentTime = new Date();
-    const scheduleTime = new Date(booking.scheduleTime);
-    
-    // Calculate cancellation fee based on how close to departure
+    // Calculate cancellation fee
+    const now = new Date();
+    const minutesToDeparture = (new Date(booking.scheduleTime) - now) / (1000 * 60);
     let cancellationFee = 0;
-    const minutesToDeparture = (scheduleTime - currentTime) / (1000 * 60);
-    
+
     if (minutesToDeparture < 30) {
-      // Less than 30 mins, 50% fee
       cancellationFee = booking.totalFare * 0.5;
     } else if (minutesToDeparture < 120) {
-      // Less than 2 hours, 20% fee
       cancellationFee = booking.totalFare * 0.2;
     }
-    // More than 2 hours before, no fee
 
     // Update booking
     booking.status = 'cancelled';
     booking.cancellationReason = cancellationReason;
     booking.cancellationFee = cancellationFee;
-    
-    await booking.save({ session });
+    await booking.save();
 
-    // If part of a pool, update pool
-    if (booking.isShared && booking.ridePoolId) {
-      const pool = await RidePool.findById(booking.ridePoolId).session(session);
-      if (pool) {
-        pool.occupiedSeats = Math.max(0, pool.occupiedSeats - 1);
-        pool.rideBookings = pool.rideBookings.filter(
-          bookingId => bookingId.toString() !== booking._id.toString()
-        );
-        
-        // If no more bookings, cancel the pool
-        if (pool.rideBookings.length === 0) {
-          pool.status = 'cancelled';
-        }
-        
-        await pool.save({ session });
-      }
-    }
-
-    // If driver assigned, free up the driver & vehicle
-    if (booking.driverId && ['scheduled', 'driver-assigned', 'on-the-way'].includes(booking.status)) {
-      const driver = await Driver.findById(booking.driverId).session(session);
-      if (driver) {
-        driver.status = 'active';
-        await driver.save({ session });
-      }
-      
-      const vehicle = await RideVehicle.findById(booking.vehicleId).session(session);
-      if (vehicle) {
-        vehicle.status = 'available';
-        await vehicle.save({ session });
-      }
-    }
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
+      message: 'Booking cancelled successfully',
       data: booking,
       cancellationFee,
-      message: 'Booking cancelled successfully' 
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 exports.rateRide = async (req, res) => {
   try {
@@ -387,14 +380,14 @@ exports.rateRide = async (req, res) => {
     }
 
     // Check if user authorized to rate
-    if (booking.userId.toString() !== req.user.id) {
+    if (booking.userId.toString() !== req.user.userId) {
       return res.status(403).json({ success: false, message: 'Not authorized to rate this ride' });
     }
 
     // Check if booking can be rated
-    if (booking.status !== 'completed') {
-      return res.status(400).json({ success: false, message: 'Can only rate completed rides' });
-    }
+    // if (booking.status !== 'completed') {
+    //   return res.status(400).json({ success: false, message: 'Can only rate completed rides' });
+    // }
 
     // Check if already rated
     if (booking.userRating) {

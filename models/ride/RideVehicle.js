@@ -9,7 +9,7 @@ const RideVehicleSchema = new mongoose.Schema({
       lng: Number,
       lastUpdated: { type: Date, default: Date.now }
     },
-    driverId: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' },
+    driverId: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' }, 
     status: { 
       type: String, 
       enum: ['available', 'on-ride', 'offline', 'maintenance'], 
