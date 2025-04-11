@@ -1,12 +1,13 @@
-const { Vehicle } = require('../models/user/Vehicle');
+const  Vehicle  = require('../models/user/Vehicle');
 
 // Add a new vehicle
 exports.addVehicle = async (req, res) => {
   try {
     const { type, model, color, licensePlate, isDefault } = req.body;
-    const userId = req.userId;
+    const userId = req.user.userId; 
+    console.log(userId);
 
-    // Check if license plate is already registered
+    // Check for existing vehicle with same license plate
     const existingVehicle = await Vehicle.findOne({ licensePlate });
     if (existingVehicle) {
       return res.status(400).json({
@@ -15,16 +16,13 @@ exports.addVehicle = async (req, res) => {
       });
     }
 
-    // If this is the default vehicle, set other vehicles to non-default
+    // If this is marked as default, update all previous vehicles of this user
     if (isDefault) {
-      await Vehicle.updateMany(
-        { userId },
-        { $set: { isDefault: false } }
-      );
+      await Vehicle.updateMany({ userId }, { $set: { isDefault: false } });
     }
 
-    // Create new vehicle
-    const vehicle = new Vehicle({
+    // Create and save new vehicle
+    const newVehicle = await Vehicle.create({
       userId,
       type,
       model,
@@ -33,19 +31,18 @@ exports.addVehicle = async (req, res) => {
       isDefault: isDefault || false
     });
 
-    await vehicle.save();
-
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: 'Vehicle added successfully',
-      vehicle
+      vehicle: newVehicle
     });
-  } catch (err) {
-    console.error('Add vehicle error:', err);
-    res.status(500).json({
+
+  } catch (error) {
+    console.error('Add vehicle error:', error.message);
+    return res.status(500).json({
       success: false,
       message: 'Error adding vehicle',
-      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+      error: error.message
     });
   }
 };
@@ -53,7 +50,7 @@ exports.addVehicle = async (req, res) => {
 // Get all vehicles for current user
 exports.getUserVehicles = async (req, res) => {
   try {
-    const userId = req.userId;
+    const userId = req.user.userId;
 
     const vehicles = await Vehicle.find({ userId });
 
@@ -203,7 +200,7 @@ exports.deleteVehicle = async (req, res) => {
 exports.setDefaultVehicle = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.userId;
+    const userId = req.user.userId;
 
     // Find vehicle
     const vehicle = await Vehicle.findOne({ _id: id, userId });

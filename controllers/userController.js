@@ -264,7 +264,7 @@ const userController = {
   },
   
   // User preferences methods
-  async getUserPreferences(req, res) {
+  async getUserPreferences(req, res) { 
     try {
       const userId = req.user.userId;
       

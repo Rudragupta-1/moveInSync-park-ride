@@ -8,5 +8,5 @@ const VehicleSchema = new mongoose.Schema({
     RFIDTag: String,
     isDefault: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
-  }, { timestamps: true });
+  }, { timestamps: true }); 
   module.exports = mongoose.model('Vehicle', VehicleSchema);
