@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const rateLimit = require('express-rate-limit'); 
 
 // Import routes
 const userRoutes = require('./routes/userRoutes');
@@ -14,13 +15,26 @@ const rideRoutes = require('./routes/rideRoutes');
 const subscriptionRoutes = require('./routes/subscriptionRoutes');
 const metroRoutes = require('./routes/metroRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
-const allocationRoutes = require('./routes/allocationRoutes'); //Hungarian algorithm routes
+const allocationRoutes = require('./routes/allocationRoutes'); // Hungarian algorithm routes
 
 // Load environment variables
 dotenv.config();
 
 // Initialize express app
 const app = express();
+
+// Rate Limiting Middleware
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again after 15 minutes'
+  }
+});
+app.use('/api', apiLimiter); 
 
 // Middleware
 app.use(cors());
@@ -38,10 +52,10 @@ mongoose.connect(process.env.MONGODB_URI, {
 .catch(err => console.error('MongoDB connection error:', err));
 
 // Routes
-app.use('/api/users', userRoutes);//Tested
-app.use('/api/vehicles', vehicleRoutes);//Tested
+app.use('/api/users', userRoutes); // Tested
+app.use('/api/vehicles', vehicleRoutes); // Tested
 app.use('/api/parking', parkingRoutes);
-app.use('/api/rides', rideRoutes);
+app.use('/api/rides', rideRoutes);// Tested
 // app.use('/api/payments', paymentRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/metro', metroRoutes); // Tested
@@ -65,5 +79,3 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
-
-// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2Y3OWQ5OTVlZDU4ZDIzMTI0ZjYzOWEiLCJpYXQiOjE3NDQyODEyOTcsImV4cCI6MTc0NDM2NzY5N30.htHOuCkHjXZDJTHxi_kh-xscM4JnuxFdmzzS0F01bY8
