@@ -39,7 +39,7 @@ You can view all the API requests and responses demonstrated via Postman in the 
 
 The following document contains visual references of the MongoDB Compass interface showing collections, documents, and data structure used in the project.
 
-[🔗 View API Documentation on Google Docs](https://docs.google.com/document/d/1wbxhY14dnyNziOwpDb1qek1MuYO-jNP6WCMIhsVn9AQ/edit?usp=sharing)
+[🔗 View DB Documentation on Google Docs](https://docs.google.com/document/d/12U7en43d_kVwt1k8nZ8sleNwhsJi3nzyg5jv9ivPpZw/edit?usp=sharing)
 
 (This provides a clear view of how data is stored and managed in collections, useful for backend understanding and API-data mapping.)
 
