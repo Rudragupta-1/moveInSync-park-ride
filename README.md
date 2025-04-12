@@ -1,7 +1,10 @@
 
-# 🚗 MoveInSync - Park & Ride
+# 🚗 MoveInSync - Park and Ride: Smart Parking & Last-Mile Connectivity Solution
 
-A backend system for managing metro rides, vehicle parking, and ride sharing, built for the **MoveInSync** project. This application provides APIs to handle user subscriptions, payments, dynamic pricing, vehicle and ride bookings, and integrates various features like Redis caching, JWT authentication, and the Hungarian Algorithm for optimal allocations.
+A Park and Ride system enhances urban mobility by integrating parking reservations and last-mile transportation
+options. This system allows commuters to pre-book parking spaces, seamlessly transition to public transport, and
+reserve last-mile rides, ensuring a smooth, efficient, and hassle-free travel experience. Below is a detailed
+breakdown of its functionalities:
 
 ---
 
