@@ -24,6 +24,27 @@ breakdown of its functionalities:
 
 ---
 
+## 📘 External Resources
+
+### 🧪 API Screenshots (Postman)
+
+You can view all the API requests and responses demonstrated via Postman in the document below. Each endpoint is accompanied by a visual request and a brief description.
+
+[🔗 View API Documentation on Google Docs](https://docs.google.com/document/d/1wbxhY14dnyNziOwpDb1qek1MuYO-jNP6WCMIhsVn9AQ/edit?usp=sharing)
+
+(Hosted on Google Docs – includes screenshots of API requests made through the Postman VS Code extension.)
+---
+
+### 🗄️ MongoDB Compass Screenshots
+
+The following document contains visual references of the MongoDB Compass interface showing collections, documents, and data structure used in the project.
+
+[🔗 View API Documentation on Google Docs](https://docs.google.com/document/d/1wbxhY14dnyNziOwpDb1qek1MuYO-jNP6WCMIhsVn9AQ/edit?usp=sharing)
+
+(This provides a clear view of how data is stored and managed in collections, useful for backend understanding and API-data mapping.)
+
+---
+
 ## 📁 Project Structure
 
 ```
