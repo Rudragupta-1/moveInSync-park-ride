@@ -1,54 +1,54 @@
 const Subscription = require('../models/payment/Subscription');
 const User = require('../models/user/User');
+const redis = require('../config/redisClient');
 
 const subscriptionController = {
   // Get all active subscription plans
   // Create a new subscription plan
-async createPlan(req, res) {
-  try {
-    const {
-      name,
-      description,
-      type,
-      duration,
-      price,
-      benefits
-    } = req.body;
-
-    // Basic validation
-    if (!name || !type || !duration || !price) {
-      return res.status(400).json({ message: 'Required fields missing: name, type, duration, price' });
-    }
-
-    // Check type validity
-    if (!['parking', 'ride', 'combo'].includes(type)) {
-      return res.status(400).json({ message: 'Invalid subscription type' });
-    }
-
-    const newPlan = new Subscription({
-      name,
-      description,
-      type,
-      duration,
-      price,
-      benefits
-    });
-
-    await newPlan.save();
-
-    return res.status(201).json({
-      message: 'Subscription plan created successfully',
-      plan: newPlan
-    });
-  } catch (error) {
-    console.error('Create plan error:', error);
-    return res.status(500).json({ message: 'Server error while creating subscription plan' });
-  }
-}
-,
-  async getAllPlans(req, res) { 
+ async createPlan(req, res) {
     try {
+      const {
+        name, description, type, duration, price, benefits
+      } = req.body;
+
+      if (!name || !type || !duration || !price) {
+        return res.status(400).json({ message: 'Required fields missing: name, type, duration, price' });
+      }
+
+      if (!['parking', 'ride', 'combo'].includes(type)) {
+        return res.status(400).json({ message: 'Invalid subscription type' });
+      }
+
+      const newPlan = new Subscription({ name, description, type, duration, price, benefits });
+      await newPlan.save();
+
+      // Invalidate related caches
+      await redis.del('subscription:plans');
+      await redis.del(`subscription:plans:type:${type}`);
+
+      return res.status(201).json({
+        message: 'Subscription plan created successfully',
+        plan: newPlan
+      });
+    } catch (error) {
+      console.error('Create plan error:', error);
+      return res.status(500).json({ message: 'Server error while creating subscription plan' });
+    }
+  },
+
+  // Get all active plans (with cache)
+  async getAllPlans(req, res) {
+    try {
+      const cacheKey = 'subscription:plans';
+      const cachedData = await redis.get(cacheKey);
+
+      if (cachedData) {
+        return res.status(200).json({ plans: JSON.parse(cachedData), source: 'cache' });
+      }
+
       const plans = await Subscription.find({ isActive: true });
+      await redis.set(cacheKey, JSON.stringify(plans), 'EX', 3600); // 1 hour TTL
+
       return res.status(200).json({ plans });
     } catch (error) {
       console.error('Get all plans error:', error);
@@ -56,16 +56,23 @@ async createPlan(req, res) {
     }
   },
 
-  // Get a specific plan by ID
+  // Get plan by ID (with cache)
   async getPlanById(req, res) {
     try {
       const { id } = req.params;
+      const cacheKey = `subscription:plan:${id}`;
+      const cached = await redis.get(cacheKey);
+
+      if (cached) {
+        return res.status(200).json({ plan: JSON.parse(cached), source: 'cache' });
+      }
+
       const plan = await Subscription.findById(id);
-      
       if (!plan) {
         return res.status(404).json({ message: 'Subscription plan not found' });
       }
-      
+
+      await redis.set(cacheKey, JSON.stringify(plan), 'EX', 3600); // 1 hour
       return res.status(200).json({ plan });
     } catch (error) {
       console.error('Get plan by ID error:', error);
@@ -73,17 +80,25 @@ async createPlan(req, res) {
     }
   },
 
-  // Get plans by type (parking, ride, combo)
+  // Get plans by type (with cache)
   async getPlansByType(req, res) {
     try {
       const { type } = req.params;
-      
-      // Validate type
+
       if (!['parking', 'ride', 'combo'].includes(type)) {
         return res.status(400).json({ message: 'Invalid subscription type' });
       }
-      
+
+      const cacheKey = `subscription:plans:type:${type}`;
+      const cached = await redis.get(cacheKey);
+
+      if (cached) {
+        return res.status(200).json({ plans: JSON.parse(cached), source: 'cache' });
+      }
+
       const plans = await Subscription.find({ type, isActive: true });
+      await redis.set(cacheKey, JSON.stringify(plans), 'EX', 3600); // 1 hour
+
       return res.status(200).json({ plans });
     } catch (error) {
       console.error('Get plans by type error:', error);
