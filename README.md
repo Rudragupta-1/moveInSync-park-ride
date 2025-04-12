@@ -10,7 +10,7 @@ A backend system for managing metro rides, vehicle parking, and ride sharing, bu
 - ✅ **JWT-based Authentication**: Secure login and API access using industry-standard JSON Web Tokens (JWT).
 - ⚡ **Redis Caching**: Integrated Redis caching to boost performance, achieving up to 3x faster response times.
 - 🛡️ **Rate Limiting**: Implemented API rate limiting to prevent abuse and protect against DDoS attacks.
-- 🧩 **Scalable Microservice-style APIs**: Each API is independently structured, enabling easier scaling, team collaboration, and streamlined debugging.
+- 🧩 **Scalable style APIs**: Each API is independently structured, enabling easier scaling, team collaboration, and streamlined debugging.
 - 🔐 **Centralized Error Handling**: All controllers use consistent `try-catch` blocks for clean, predictable error management.
 - 💸 **Dynamic Pricing Engine**: Dynamic pricing logic in place for parking and ride bookings based on demand and availability.
 - 🧱 **Robust Mongoose Schemas**: Comprehensive data models with all essential parameters ensure strong data integrity and validation.
