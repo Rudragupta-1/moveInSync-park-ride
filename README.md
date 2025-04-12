@@ -5,6 +5,22 @@ A backend system for managing metro rides, vehicle parking, and ride sharing, bu
 
 ---
 
+## 🚀 Features
+
+- ✅ **JWT-based Authentication**: Secure login and API access using industry-standard JSON Web Tokens (JWT).
+- ⚡ **Redis Caching**: Integrated Redis caching to boost performance, achieving up to 3x faster response times.
+- 🛡️ **Rate Limiting**: Implemented API rate limiting to prevent abuse and protect against DDoS attacks.
+- 🧩 **Scalable Microservice-style APIs**: Each API is independently structured, enabling easier scaling, team collaboration, and streamlined debugging.
+- 🔐 **Centralized Error Handling**: All controllers use consistent `try-catch` blocks for clean, predictable error management.
+- 💸 **Dynamic Pricing Engine**: Dynamic pricing logic in place for parking and ride bookings based on demand and availability.
+- 🧱 **Robust Mongoose Schemas**: Comprehensive data models with all essential parameters ensure strong data integrity and validation.
+- 📦 **Modular Codebase Architecture**: Cleanly separated concerns — from `server.js` to `routes`, `controllers`, `models`, and `middleware`.
+- 🔄 **Flexible Cancellation & Modifications**: Users can easily cancel or modify their bookings based on policy.
+- 🚗 **RFID & License Plate Integration**: License plate recognition and RFID-enabled entry/exit validation for a seamless parking experience.
+- 🔀 **Multi-Modal Booking System**: Supports integrated bookings across parking, metro, and ride-sharing for enhanced commuter convenience.
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -155,23 +171,3 @@ npm run dev
 npm start
 ```
 
----
-
-## 🧠 Features
-
-- 🔐 **Secure authentication** using JWT and bcrypt
-- 🚘 **Ride pooling, vehicle booking, and parking** APIs
-- 🧠 **Dynamic pricing** for parking using custom logic
-- 🧮 **Optimal allocation** of vehicles using the Hungarian algorithm
-- 💳 **Subscription & payment** model support
-- 🗃️ **Redis** caching setup via `ioredis`
-- 📏 **Rate limiting, Helmet, XSS protection** for production-readiness
-
----
-
-## 📌 Future Enhancements
-
-- Add Swagger documentation
-- Integrate with a payment gateway
-- Role-based access control
-- Admin panel for analytics

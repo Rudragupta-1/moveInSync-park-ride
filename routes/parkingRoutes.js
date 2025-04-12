@@ -21,7 +21,7 @@ router.post('/bookings', auth, parkingController.createBooking);// Tested
 router.get('/bookings', auth, parkingController.getUserBookings);// Tested
 router.get('/bookings/:id', auth, parkingController.getBookingById);// Tested
 router.put('/bookings/:id/cancel', auth, parkingController.cancelBooking);// Tested
-router.put('/bookings/:id/extend', auth, parkingController.extendBooking); // Tested
+router.put('/bookings/:id/extend', auth, parkingController.extendBooking); // Tested 
 router.post('/bookings/:id/check-in', auth, parkingController.checkInBooking);
 router.post('/bookings/:id/check-out', auth, parkingController.checkOutBooking);
 
