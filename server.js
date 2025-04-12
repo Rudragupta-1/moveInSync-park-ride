@@ -58,7 +58,7 @@ app.use('/api/parking', parkingRoutes);// Tested
 app.use('/api/rides', rideRoutes);// Tested
 app.use('/api/metro', metroRoutes); // Tested
 app.use('/api/allocation', allocationRoutes); // Hungarian algorithm allocation routes
-app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);// Tested
 app.use('/api/notifications', notificationRoutes);
 // app.use('/api/payments', paymentRoutes);
 
