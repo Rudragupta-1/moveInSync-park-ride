@@ -1,9 +1,9 @@
 const ParkingStation = require('../models/parking/ParkingStation');
 const ParkingSpot = require('../models/parking/ParkingSpot');
 const ParkingBooking = require('../models/parking/ParkingBooking');
-const Vehicle = require('../models/user/Vehicle'); // Assuming this exists
+const Vehicle = require('../models/user/Vehicle'); 
 const mongoose = require('mongoose');
-const { generateBookingReference, generateQRCode } = require('../utils/helpers'); // Assuming these utility functions exist
+const { generateBookingReference, generateQRCode } = require('../utils/helpers'); 
 
 /**
  * Parking Station Controllers
@@ -136,7 +136,6 @@ exports.getStationsNearLocation = async (req, res) => {
 /**
  * Parking Spot Controllers
  */
-// In parkingController.js
 exports.addParkingSpot = async (req, res) => {
   try {
     const {

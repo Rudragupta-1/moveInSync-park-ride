@@ -1,11 +1,8 @@
-/**
- * Utility functions for booking operations
- */
+
 
 const qrcode = require('qrcode');
 
 /**
- * Generates a unique booking reference
  * @param {number} length - The length of the booking reference
  * @returns {string} - A unique booking reference
  */

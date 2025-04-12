@@ -3,7 +3,6 @@ const User = require('../models/user/User');
 const redis = require('../config/redisClient');
 
 const subscriptionController = {
-  // Get all active subscription plans
   // Create a new subscription plan
  async createPlan(req, res) {
     try {

@@ -1,7 +1,6 @@
 const munkres = require('munkres-js');
 
 /**
- * Generate a cost matrix for Hungarian algorithm based on vehicles and spots
  * @param {Array} vehicles - Array of vehicle objects with preferences
  * @param {Array} parkingSpots - Array of available parking spots
  * @param {Object} station - The parking station object

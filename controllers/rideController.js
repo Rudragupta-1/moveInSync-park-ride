@@ -164,11 +164,11 @@ exports.getAvailableVehiclesNearStation = async (req, res) => {
     const stationLat = station.location.coordinates.lat;
     const stationLng = station.location.coordinates.lng;
     
-    // Find providers that serve this station
+    // providers that serve this station
     const providers = await RideProvider.find({ servingStations: stationId, active: true });
     const providerIds = providers.map(provider => provider._id);
     
-    // Find available vehicles from these providers within a certain distance
+    //  available vehicles from these providers within a certain distance
     const maxDistance = 5000; // 5km in meters
     const vehicles = await RideVehicle.find({
       providerId: { $in: providerIds },
@@ -299,7 +299,6 @@ exports.getBookingById = async (req, res) => {
       .populate('providerId', 'name type contactInfo')
       .populate('vehicleId', 'vehicleType registrationNumber features')
       .populate('driverId', 'name phone profileImage');
-      // Removed the ridePoolId populate that was causing the error
 
     if (!booking) {
       return res.status(404).json({ success: false, message: 'Booking not found' });
