@@ -54,13 +54,13 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Routes
 app.use('/api/users', userRoutes); // Tested
 app.use('/api/vehicles', vehicleRoutes); // Tested
-app.use('/api/parking', parkingRoutes);
+app.use('/api/parking', parkingRoutes);// Tested
 app.use('/api/rides', rideRoutes);// Tested
-// app.use('/api/payments', paymentRoutes);
-app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/metro', metroRoutes); // Tested
-app.use('/api/notifications', notificationRoutes);
 app.use('/api/allocation', allocationRoutes); // Hungarian algorithm allocation routes
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/notifications', notificationRoutes);
+// app.use('/api/payments', paymentRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

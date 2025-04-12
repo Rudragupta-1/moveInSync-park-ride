@@ -3,7 +3,50 @@ const User = require('../models/user/User');
 
 const subscriptionController = {
   // Get all active subscription plans
-  async getAllPlans(req, res) {
+  // Create a new subscription plan
+async createPlan(req, res) {
+  try {
+    const {
+      name,
+      description,
+      type,
+      duration,
+      price,
+      benefits
+    } = req.body;
+
+    // Basic validation
+    if (!name || !type || !duration || !price) {
+      return res.status(400).json({ message: 'Required fields missing: name, type, duration, price' });
+    }
+
+    // Check type validity
+    if (!['parking', 'ride', 'combo'].includes(type)) {
+      return res.status(400).json({ message: 'Invalid subscription type' });
+    }
+
+    const newPlan = new Subscription({
+      name,
+      description,
+      type,
+      duration,
+      price,
+      benefits
+    });
+
+    await newPlan.save();
+
+    return res.status(201).json({
+      message: 'Subscription plan created successfully',
+      plan: newPlan
+    });
+  } catch (error) {
+    console.error('Create plan error:', error);
+    return res.status(500).json({ message: 'Server error while creating subscription plan' });
+  }
+}
+,
+  async getAllPlans(req, res) { 
     try {
       const plans = await Subscription.find({ isActive: true });
       return res.status(200).json({ plans });

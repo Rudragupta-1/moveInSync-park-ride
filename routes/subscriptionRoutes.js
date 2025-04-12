@@ -4,9 +4,10 @@ const subscriptionController = require('../controllers/subscriptionController');
 const auth = require('../middleware/auth');
 
 // Get all available subscription plans
-router.get('/plans', subscriptionController.getAllPlans);
-router.get('/plans/:id', subscriptionController.getPlanById);
-router.get('/plans/type/:type', subscriptionController.getPlansByType);
+router.post('/plans', subscriptionController.createPlan);// Tested
+router.get('/plans', subscriptionController.getAllPlans);//Tested
+router.get('/plans/:id', subscriptionController.getPlanById);// Tested
+router.get('/plans/type/:type', subscriptionController.getPlansByType);// Tested
 
 // User subscription management (protected)
 router.post('/subscribe', auth, subscriptionController.createSubscription);
