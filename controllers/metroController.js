@@ -106,7 +106,6 @@ exports.getStationsNearby = async (req, res) => {
 };
 
 // Metro schedule controllers
-// Add this to your metroController.js file
 exports.addSchedule = async (req, res) => {
   try {
     const {
